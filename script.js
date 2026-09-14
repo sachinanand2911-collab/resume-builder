@@ -1,5 +1,5 @@
 // ===================================================
-// 1. LIVE PREVIEW SYNC FUNCTION
+// 1. LIVE SYNC FUNCTION (TYPING PREVIEW)
 // ===================================================
 function syncInput(inputId, previewId, defaultValue) {
   const inputElem = document.getElementById(inputId);
@@ -9,11 +9,11 @@ function syncInput(inputId, previewId, defaultValue) {
     const value = inputElem.value.trim();
     previewElem.textContent = value !== '' ? value : defaultValue;
     localStorage.setItem(inputId, inputElem.value);
-    updateQRCode(); // Dynamically update QR code when text changes
+    updateQRCode();
   });
 }
 
-// Bind single fields for live typing preview
+// Bind input fields to preview element
 syncInput('name-input', 'preview-name', 'Rahul Sharma');
 syncInput('title-input', 'preview-title', 'Frontend Developer');
 syncInput('email-input', 'preview-email', 'rahul@example.com');
@@ -84,18 +84,18 @@ document.getElementById('download-btn').addEventListener('click', () => {
 });
 
 // ===================================================
-// 6. ENCODED DYNAMIC QR CODE GENERATOR (REAL-TIME DATA SYNC)
+// 6. ENCODED DYNAMIC QR CODE GENERATOR (FAST SCANNING - LEVEL L, 90px)
 // ===================================================
 const portfolioInput = document.getElementById('portfolio-url-input');
 const qrcodeContainer = document.getElementById('qrcode');
 
 const qrCodeObj = new QRCode(qrcodeContainer, {
   text: window.location.href,
-  width: 60,
-  height: 60,
+  width: 90,
+  height: 90,
   colorDark: "#0f172a",
   colorLight: "#ffffff",
-  correctLevel: QRCode.CorrectLevel.M
+  correctLevel: QRCode.CorrectLevel.L
 });
 
 function generateShareableUrl() {
@@ -131,10 +131,10 @@ portfolioInput.addEventListener('input', () => {
 });
 
 // ===================================================
-// 7. LOAD SAVED DATA & SCAN DATA PARSER
+// 7. LOAD SAVED DATA (SCAN DATA PARSER & LOCAL STORAGE)
 // ===================================================
 window.addEventListener('load', () => {
-  // Mobile QR Scan Detection
+  // Mobile QR Scan Logic
   if (window.location.hash.includes('#data=')) {
     try {
       const encodedData = window.location.hash.split('#data=')[1];
@@ -167,16 +167,23 @@ window.addEventListener('load', () => {
     }
   }
 
-  // Restore LocalStorage Data for Live Editing
-  const fields = ['name-input', 'title-input', 'email-input', 'phone-input', 'summary-input', 'portfolio-url-input'];
-  fields.forEach(id => {
-    const savedVal = localStorage.getItem(id);
+  // Restore LocalStorage Data for Laptop Browser Editing
+  const fieldMap = [
+    { input: 'name-input', preview: 'preview-name' },
+    { input: 'title-input', preview: 'preview-title' },
+    { input: 'email-input', preview: 'preview-email' },
+    { input: 'phone-input', preview: 'preview-phone' },
+    { input: 'summary-input', preview: 'preview-summary' },
+    { input: 'portfolio-url-input', preview: null }
+  ];
+
+  fieldMap.forEach(item => {
+    const savedVal = localStorage.getItem(item.input);
     if (savedVal) {
-      document.getElementById(id).value = savedVal;
-      // Trigger sync manually for preview initialization
-      const previewId = id.replace('-input', '').replace('name', 'preview-name').replace('title', 'preview-title').replace('email', 'preview-email').replace('phone', 'preview-phone').replace('summary', 'preview-summary');
-      const previewElem = document.getElementById(previewId);
-      if (previewElem) previewElem.textContent = savedVal;
+      document.getElementById(item.input).value = savedVal;
+      if (item.preview) {
+        document.getElementById(item.preview).textContent = savedVal;
+      }
     }
   });
 
