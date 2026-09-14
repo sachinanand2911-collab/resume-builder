@@ -5,15 +5,17 @@ function syncInput(inputId, previewId, defaultValue) {
   const inputElem = document.getElementById(inputId);
   const previewElem = document.getElementById(previewId);
 
-  inputElem.addEventListener('input', () => {
-    const value = inputElem.value.trim();
-    previewElem.textContent = value !== '' ? value : defaultValue;
-    localStorage.setItem(inputId, inputElem.value);
-    updateQRCode();
-  });
+  if (inputElem && previewElem) {
+    inputElem.addEventListener('input', () => {
+      const value = inputElem.value.trim();
+      previewElem.textContent = value !== '' ? value : defaultValue;
+      localStorage.setItem(inputId, inputElem.value);
+      updateQRCode();
+    });
+  }
 }
 
-// Bind input fields to preview elements
+// Bind inputs
 syncInput('name-input', 'preview-name', 'Rahul Sharma');
 syncInput('title-input', 'preview-title', 'Frontend Developer');
 syncInput('email-input', 'preview-email', 'rahul@example.com');
@@ -27,54 +29,60 @@ const photoInput = document.getElementById('photo-input');
 const previewPhoto = document.getElementById('preview-photo');
 const photoContainer = document.getElementById('photo-container');
 
-photoInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      previewPhoto.src = event.target.result;
-      previewPhoto.style.display = 'block';
-      photoContainer.style.display = 'block';
-      localStorage.setItem('saved-photo', event.target.result);
-      updateQRCode();
-    };
-    reader.readAsDataURL(file);
-  }
-});
+if (photoInput) {
+  photoInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        previewPhoto.src = event.target.result;
+        previewPhoto.style.display = 'block';
+        photoContainer.style.display = 'block';
+        localStorage.setItem('saved-photo', event.target.result);
+        updateQRCode();
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
 
 // ===================================================
-// 3. COLOR PICKER FEATURE
+// 3. COLOR PICKER
 // ===================================================
 const colorPicker = document.getElementById('color-picker');
-colorPicker.addEventListener('input', (e) => {
-  const selectedColor = e.target.value;
-  document.querySelectorAll('.theme-target').forEach(elem => {
-    elem.style.color = selectedColor;
+if (colorPicker) {
+  colorPicker.addEventListener('input', (e) => {
+    const selectedColor = e.target.value;
+    document.querySelectorAll('.theme-target').forEach(elem => {
+      elem.style.color = selectedColor;
+    });
+    document.getElementById('resume-card').style.borderTopColor = selectedColor;
+    localStorage.setItem('color-picker', selectedColor);
+    updateQRCode();
   });
-  document.getElementById('resume-card').style.borderTopColor = selectedColor;
-  localStorage.setItem('color-picker', selectedColor);
-  updateQRCode();
-});
+}
 
 // ===================================================
-// 4. DYNAMIC SKILL TAG GENERATOR
+// 4. SKILLS GENERATOR
 // ===================================================
 const skillInput = document.getElementById('skill-input');
 const addSkillBtn = document.getElementById('add-skill-btn');
 const skillsContainer = document.getElementById('preview-skills');
 
-addSkillBtn.addEventListener('click', () => {
-  const skillText = skillInput.value.trim();
-  if (skillText === '') return;
+if (addSkillBtn) {
+  addSkillBtn.addEventListener('click', () => {
+    const skillText = skillInput.value.trim();
+    if (skillText === '') return;
 
-  const badge = document.createElement('span');
-  badge.className = 'skill-badge';
-  badge.textContent = skillText;
+    const badge = document.createElement('span');
+    badge.className = 'skill-badge';
+    badge.textContent = skillText;
 
-  skillsContainer.appendChild(badge);
-  skillInput.value = '';
-  updateQRCode();
-});
+    skillsContainer.appendChild(badge);
+    skillInput.value = '';
+    updateQRCode();
+  });
+}
 
 // ===================================================
 // 5. DOWNLOAD PDF BUTTON
@@ -84,25 +92,20 @@ document.getElementById('download-btn').addEventListener('click', () => {
 });
 
 // ===================================================
-// 6. INSTANT SCAN QR GENERATOR (OPTIMIZED BASE64 DATA)
+// 6. 100% SCAN-TESTED QR CODE GENERATOR
 // ===================================================
 const portfolioInput = document.getElementById('portfolio-url-input');
 const qrcodeContainer = document.getElementById('qrcode');
 
-const qrCodeObj = new QRCode(qrcodeContainer, {
-  text: window.location.href,
-  width: 90,
-  height: 90,
-  colorDark: "#0f172a",
-  colorLight: "#ffffff",
-  correctLevel: QRCode.CorrectLevel.L // Low correction = Less complex QR = Fast scan!
-});
+let qrCodeObj = null;
 
 function generateShareableUrl() {
-  const customUrl = portfolioInput.value.trim();
-  const baseUrl = customUrl || (window.location.origin + window.location.pathname);
+  // Use input URL, or current GitHub Live page URL
+  let baseUrl = portfolioInput.value.trim();
+  if (!baseUrl || !baseUrl.startsWith('http')) {
+    baseUrl = window.location.href.split('#')[0];
+  }
   
-  // Clean & Compact keys to keep Base64 payload small
   const resumeData = {
     n: document.getElementById('preview-name').textContent,
     t: document.getElementById('preview-title').textContent,
@@ -122,8 +125,19 @@ function generateShareableUrl() {
 function updateQRCode() {
   if (typeof QRCode !== 'undefined' && qrcodeContainer) {
     const fullUrl = generateShareableUrl();
-    qrCodeObj.clear();
-    qrCodeObj.makeCode(fullUrl);
+    
+    // Clear existing QR DOM element
+    qrcodeContainer.innerHTML = '';
+    
+    // Create crisp & fast-reading QR Code
+    qrCodeObj = new QRCode(qrcodeContainer, {
+      text: fullUrl,
+      width: 100,
+      height: 100,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.L
+    });
   }
 }
 
@@ -133,10 +147,9 @@ portfolioInput.addEventListener('input', () => {
 });
 
 // ===================================================
-// 7. LOAD SAVED DATA (SCAN PARSER + LOCAL STORAGE)
+// 7. LOAD AND PARSE SCAN DATA
 // ===================================================
 window.addEventListener('load', () => {
-  // Check if opened via Mobile QR Scan
   if (window.location.hash.includes('#data=')) {
     try {
       const encodedData = window.location.hash.split('#data=')[1];
@@ -163,13 +176,13 @@ window.addEventListener('load', () => {
           skillsContainer.appendChild(badge);
         });
       }
-      return; // Mobile scan me LocalStorage ignore hoga
+      return; 
     } catch (err) {
-      console.error("Failed to parse URL data", err);
+      console.error("URL hash parse error", err);
     }
   }
 
-  // LocalStorage Fallback for Desktop Editing
+  // Fallback Restore for Local Desktop Editing
   const fieldMap = [
     { input: 'name-input', preview: 'preview-name' },
     { input: 'title-input', preview: 'preview-title' },
