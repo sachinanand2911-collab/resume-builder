@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Resume Builder</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Vanilla JS QR Code Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+  <!-- TOP NAVBAR -->
+  <header class="no-print">
+    <h1>Live Resume Builder</h1>
+    <button id="download-btn">Download PDF</button>
+  </header>
+
+  <main class="container">
+    <!-- LEFT PANEL: INPUT FORM -->
+    <section class="form-panel no-print">
+      <h2>Enter Details</h2>
+
+      <!-- Profile Photo Upload -->
+      <div class="input-group">
+        <label for="photo-input">Profile Photo</label>
+        <input type="file" id="photo-input" accept="image/*">
+      </div>
+
+      <!-- Personal Info -->
+      <div class="input-group">
+        <label for="name-input">Full Name</label>
+        <input type="text" id="name-input" placeholder="e.g. Rahul Sharma">
+      </div>
+
+      <div class="input-group">
+        <label for="title-input">Professional Title</label>
+        <input type="text" id="title-input" placeholder="e.g. Frontend Developer">
+      </div>
+
+      <div class="input-group">
+        <label for="email-input">Email</label>
+        <input type="email" id="email-input" placeholder="e.g. rahul@example.com">
+      </div>
+
+      <div class="input-group">
+        <label for="phone-input">Phone Number</label>
+        <input type="text" id="phone-input" placeholder="e.g. +91 9876543210">
+      </div>
+
+      <!-- Direct Resume PDF Link Input for QR Download -->
+      <div class="input-group">
+        <label for="portfolio-url-input">Direct Resume PDF Link (for Phone Download QR)</label>
+        <input type="text" id="portfolio-url-input" placeholder="https://your-domain.com/my-resume.pdf">
+        <small style="font-size: 11px; color: #64748b; margin-top: 4px; display: block;">
+          Scan karte hi phone par resume PDF open & download ho jayegi.
+        </small>
+      </div>
+
+      <div class="input-group">
+        <label for="summary-input">Summary</label>
+        <textarea id="summary-input" rows="3" placeholder="Brief background..."></textarea>
+      </div>
+
+      <!-- Theme Color Picker -->
+      <div class="input-group">
+        <label for="color-picker">Accent Color</label>
+        <input type="color" id="color-picker" value="#2c3e50">
+      </div>
+
+      <!-- Dynamic Skills -->
+      <div class="input-group">
+        <label>Add Skills</label>
+        <div class="skill-input-wrapper">
+          <input type="text" id="skill-input" placeholder="e.g. JavaScript">
+          <button type="button" id="add-skill-btn">Add</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: A4 PREVIEW CARD -->
+    <section class="preview-panel">
+      <div class="resume-card" id="resume-card">
+        
+        <!-- HEADER BLOCK WITH PHOTO -->
+        <div class="resume-header-flex">
+          <div class="header-text">
+            <h1 id="preview-name" class="theme-target">Rahul Sharma</h1>
+            <p id="preview-title" class="title-text">Frontend Developer</p>
+            
+            <div class="contact-line">
+              <span id="preview-email">rahul@example.com</span> | 
+              <span id="preview-phone">+91 9876543210</span>
+            </div>
+          </div>
+          
+          <!-- Photo Container -->
+          <div class="photo-container" id="photo-container">
+            <img id="preview-photo" src="" alt="Profile Photo" style="display: none;">
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="resume-section">
+          <h3 class="theme-target">Professional Summary</h3>
+          <p id="preview-summary">Passionate developer eager to build web applications using HTML, CSS, and JavaScript.</p>
+        </div>
+
+        <div class="resume-section">
+          <h3 class="theme-target">Skills</h3>
+          <div id="preview-skills" class="skills-container">
+            <span class="skill-badge">HTML5</span>
+            <span class="skill-badge">CSS3</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Phone Scan & Download QR Code -->
+        <div class="qr-footer">
+          <div id="qrcode"></div>
+          <p class="qr-text">Scan to Download Resume</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
