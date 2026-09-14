@@ -1,102 +1,92 @@
-// 1. LIVE SYNC FUNCTION
-function syncInput(inputId, previewId, defaultValue) {
-  const inputElem = document.getElementById(inputId);
-  const previewElem = document.getElementById(previewId);
-
-  inputElem.addEventListener('input', () => {
-    const value = inputElem.value.trim();
-    previewElem.textContent = value !== '' ? value : defaultValue;
-    
-    // Auto Save to localStorage
-    localStorage.setItem(inputId, inputElem.value);
-  });
-}
-
-// Bind single fields
-syncInput('name-input', 'preview-name', 'Rahul Sharma');
-syncInput('title-input', 'preview-title', 'Frontend Developer');
-syncInput('email-input', 'preview-email', 'rahul@example.com');
-syncInput('phone-input', 'preview-phone', '+91 9876543210');
-syncInput('summary-input', 'preview-summary', 'Passionate developer eager to build web applications using HTML, CSS, and JavaScript.');
-
-// 2. PROFILE PHOTO UPLOADER
-const photoInput = document.getElementById('photo-input');
-const previewPhoto = document.getElementById('preview-photo');
-const photoContainer = document.getElementById('photo-container');
-
-photoInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(event) {
-      previewPhoto.src = event.target.result;
-      previewPhoto.style.display = 'block';
-      photoContainer.style.display = 'block';
-      localStorage.setItem('saved-photo', event.target.result);
-    };
-    reader.readAsDataURL(file);
-  }
-});
-
-// 3. COLOR PICKER FEATURE
-const colorPicker = document.getElementById('color-picker');
-colorPicker.addEventListener('input', (e) => {
-  const selectedColor = e.target.value;
-  document.querySelectorAll('.theme-target').forEach(elem => {
-    elem.style.color = selectedColor;
-  });
-  document.getElementById('resume-card').style.borderTopColor = selectedColor;
-  localStorage.setItem('color-picker', selectedColor);
-});
-
-// 4. DYNAMIC SKILL TAG GENERATOR
-const skillInput = document.getElementById('skill-input');
-const addSkillBtn = document.getElementById('add-skill-btn');
-const skillsContainer = document.getElementById('preview-skills');
-
-addSkillBtn.addEventListener('click', () => {
-  const skillText = skillInput.value.trim();
-  if (skillText === '') return;
-
-  const badge = document.createElement('span');
-  badge.className = 'skill-badge';
-  badge.textContent = skillText;
-
-  skillsContainer.appendChild(badge);
-  skillInput.value = '';
-});
-
-// 5. DOWNLOAD PDF BUTTON
-document.getElementById('download-btn').addEventListener('click', () => {
-  window.print();
-});
-
-// 6. DYNAMIC PHONE RESUME DOWNLOAD QR CODE GENERATOR
+// ===================================================
+// 6. ENCODED DYNAMIC QR CODE GENERATOR (FOR MOBILE DATA SYNC)
+// ===================================================
 const portfolioInput = document.getElementById('portfolio-url-input');
 const qrcodeContainer = document.getElementById('qrcode');
 
+// QR Code Instance
 const qrCodeObj = new QRCode(qrcodeContainer, {
-  text: window.location.href, // Defaults to current document URL
+  text: window.location.href,
   width: 60,
   height: 60,
   colorDark: "#0f172a",
   colorLight: "#ffffff",
-  correctLevel: QRCode.CorrectLevel.H
+  correctLevel: QRCode.CorrectLevel.M
 });
 
-portfolioInput.addEventListener('input', () => {
-  const url = portfolioInput.value.trim();
-  const downloadUrl = url !== '' ? url : window.location.href;
+// Function to generate Shareable URL with User Data
+function generateShareableUrl() {
+  const baseUrl = portfolioInput.value.trim() || window.location.origin + window.location.pathname;
   
+  const resumeData = {
+    name: document.getElementById('name-input').value.trim(),
+    title: document.getElementById('title-input').value.trim(),
+    email: document.getElementById('email-input').value.trim(),
+    phone: document.getElementById('phone-input').value.trim(),
+    summary: document.getElementById('summary-input').value.trim(),
+    color: document.getElementById('color-picker').value,
+    skills: Array.from(document.querySelectorAll('#preview-skills .skill-badge')).map(b => b.textContent)
+  };
+
+  // Convert object to Base64 Hash string
+  const jsonString = JSON.stringify(resumeData);
+  const encodedData = btoa(encodeURIComponent(jsonString));
+  
+  return `${baseUrl}#data=${encodedData}`;
+}
+
+// Update QR Code whenever inputs change
+function updateQRCode() {
+  const fullUrl = generateShareableUrl();
   qrCodeObj.clear();
-  qrCodeObj.makeCode(downloadUrl);
-  localStorage.setItem('portfolio-url-input', url);
+  qrCodeObj.makeCode(fullUrl);
+}
+
+// Add event listeners to input fields to update QR dynamically
+['name-input', 'title-input', 'email-input', 'phone-input', 'summary-input', 'portfolio-url-input', 'color-picker'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateQRCode);
 });
 
-// 7. LOAD SAVED DATA ON PAGE RELOAD
+// ===================================================
+// 7. LOAD SAVED DATA (localStorage + URL Hash Data)
+// ===================================================
 window.addEventListener('load', () => {
+  // Check if opened via QR Scan (URL contains #data=...)
+  if (window.location.hash.includes('#data=')) {
+    try {
+      const encodedData = window.location.hash.split('#data=')[1];
+      const jsonString = decodeURIComponent(atob(encodedData));
+      const data = JSON.parse(jsonString);
+
+      if (data.name) document.getElementById('preview-name').textContent = data.name;
+      if (data.title) document.getElementById('preview-title').textContent = data.title;
+      if (data.email) document.getElementById('preview-email').textContent = data.email;
+      if (data.phone) document.getElementById('preview-phone').textContent = data.phone;
+      if (data.summary) document.getElementById('preview-summary').textContent = data.summary;
+      
+      if (data.color) {
+        document.querySelectorAll('.theme-target').forEach(e => e.style.color = data.color);
+        document.getElementById('resume-card').style.borderTopColor = data.color;
+      }
+
+      if (data.skills && data.skills.length > 0) {
+        const skillsContainer = document.getElementById('preview-skills');
+        skillsContainer.innerHTML = '';
+        data.skills.forEach(skill => {
+          const badge = document.createElement('span');
+          badge.className = 'skill-badge';
+          badge.textContent = skill;
+          skillsContainer.appendChild(badge);
+        });
+      }
+      return; // Stop local storage fallback if URL data exists
+    } catch (err) {
+      console.error("Failed to parse URL data", err);
+    }
+  }
+
+  // LocalStorage Fallback for laptop browser editing
   const fields = ['name-input', 'title-input', 'email-input', 'phone-input', 'summary-input', 'portfolio-url-input'];
-  
   fields.forEach(id => {
     const savedVal = localStorage.getItem(id);
     if (savedVal) {
@@ -105,18 +95,18 @@ window.addEventListener('load', () => {
     }
   });
 
-  // Restore Color Accent
   const savedColor = localStorage.getItem('color-picker');
   if (savedColor) {
     colorPicker.value = savedColor;
     colorPicker.dispatchEvent(new Event('input'));
   }
 
-  // Restore Profile Photo
   const savedPhoto = localStorage.getItem('saved-photo');
   if (savedPhoto) {
     previewPhoto.src = savedPhoto;
     previewPhoto.style.display = 'block';
     photoContainer.style.display = 'block';
   }
+
+  updateQRCode();
 });
