@@ -1,3 +1,6 @@
+/* ===================================================
+   GLOBAL & CORE STYLES
+   =================================================== */
 *{
   box-sizing: border-box;
   margin: 0;
@@ -58,7 +61,7 @@ header h1 {
   margin: 0 auto;
 }
 
-/* LEFT PANEL */
+/* LEFT PANEL (FORM EDITOR) */
 .form-panel {
   flex: 1;
   background: #ffffff;
@@ -149,7 +152,7 @@ header h1 {
   transform: translateY(-1px);
 }
 
-/* RIGHT PANEL: PREVIEW CARD */
+/* RIGHT PANEL: FINAL RESUME CARD PREVIEW */
 .preview-panel {
   flex: 1.1;
   display: flex;
@@ -307,7 +310,40 @@ hr {
   letter-spacing: 0.5px;
 }
 
-/* PRINT STYLING FOR PDF */
+/* ===================================================
+   MOBILE SCAN VIEW (SHOW ONLY FINAL RESUME)
+   =================================================== */
+@media screen and (max-width: 768px) {
+  /* Hide Header and Form Editor when opened on Mobile */
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  .container {
+    padding: 10px;
+    display: block;
+  }
+
+  .preview-panel {
+    width: 100%;
+  }
+
+  .resume-card {
+    box-shadow: none !important;
+    border-top: none !important;
+    padding: 15px !important;
+    width: 100% !important;
+    min-height: auto;
+  }
+}
+
+/* ===================================================
+   PRINT STYLING (FOR SAVING CLEAN PDF)
+   =================================================== */
 @media print {
   .no-print {
     display: none !important;
